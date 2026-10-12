@@ -1,2 +1,21 @@
-# audio-to-text-web
-Web app for converting audio (especially Persian) to text
+# اپ وب تبدیل صوت به متن
+
+## اجرا
+
+```bash
+cd audio-to-text-web
+pip install -r requirements.txt
+python app.py
+```
+
+سپس در مرورگر برو به: http://localhost:5000
+
+## ویژگی‌ها
+- آپلود فایل صوتی
+- پشتیبانی از زبان فارسی (پیش‌فرض)
+- تقسیم خودکار فایل‌های طولانی
+- دانلود مستقیم فایل متنی
+
+## نیازمندی‌ها
+- Python 3
+- ffmpeg (برای تقسیم صوت)

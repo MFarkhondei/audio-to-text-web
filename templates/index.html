@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تبدیل صوت به متن</title>
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: bold;
+        }
+        input[type="file"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .flash {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .note {
+            font-size: 13px;
+            color: #95a5a6;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تبدیل صوت به متن</h1>
+        <p class="subtitle">فایل صوتی خود را آپلود کنید (پشتیبانی از فارسی)</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="post" enctype="multipart/form-data">
+            <label for="audio">فایل صوتی (m4a, mp3, wav, ...):</label>
+            <input type="file" name="audio" id="audio" accept="audio/*,.m4a,.mp3,.wav,.aac" required>
+
+            <label for="language">زبان:</label>
+            <select name="language" id="language">
+                <option value="fa-IR" selected>فارسی (Persian)</option>
+                <option value="en-US">انگلیسی (English)</option>
+                <option value="ar-SA">عربی (Arabic)</option>
+            </select>
+
+            <button type="submit">تبدیل به متن</button>
+        </form>
+
+        <p class="note">
+            فایل‌های طولانی به صورت خودکار به بخش‌های ۳۰ ثانیه‌ای تقسیم می‌شوند.<br>
+            خروجی فقط یک فایل متنی (transcript.txt) خواهد بود.
+        </p>
+    </div>
+</body>
+</html>
