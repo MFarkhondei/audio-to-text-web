@@ -4,6 +4,8 @@ import tempfile
 import subprocess
 import re
 import requests
+import shutil
+import platform
 from pathlib import Path
 import speech_recognition as sr
 
@@ -11,6 +13,9 @@ app = Flask(__name__)
 app.secret_key = "audio-to-text-secret"
 UPLOAD_FOLDER = "/tmp/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def is_ffmpeg_available() -> bool:
+    return shutil.which("ffmpeg") is not None
 
 def get_duration(audio_path: str) -> float:
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -45,7 +50,6 @@ def transcribe_segments(segments: list[str], language: str = "fa-IR") -> str:
     return " ".join(full_text)
 
 def extract_drive_file_id(url: str) -> str | None:
-    """Extract Google Drive file ID from various URL formats."""
     patterns = [
         r"/file/d/([a-zA-Z0-9_-]+)",
         r"id=([a-zA-Z0-9_-]+)",
@@ -58,7 +62,6 @@ def extract_drive_file_id(url: str) -> str | None:
     return None
 
 def download_drive_file(file_id: str, dest_path: str) -> bool:
-    """Download a publicly shared Google Drive file."""
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
     try:
         response = requests.get(url, stream=True, timeout=60)
@@ -76,6 +79,30 @@ def download_drive_file(file_id: str, dest_path: str) -> bool:
         return True
     except Exception:
         return False
+
+@app.route("/install-ffmpeg", methods=["POST"])
+def install_ffmpeg():
+    if is_ffmpeg_available():
+        flash("ffmpeg قبلاً نصب شده است.")
+        return redirect(url_for("index"))
+
+    system = platform.system()
+    try:
+        if system == "Windows":
+            result = subprocess.run(
+                ["winget", "install", "--id", "Gyan.FFmpeg", "-e", "--accept-package-agreements", "--accept-source-agreements"],
+                capture_output=True, text=True, timeout=180
+            )
+            if result.returncode == 0 or is_ffmpeg_available():
+                flash("ffmpeg با موفقیت نصب شد. لطفاً صفحه را رفرش کنید.")
+            else:
+                flash("نصب خودکار ناموفق بود. دستور دستی: winget install Gyan.FFmpeg")
+        else:
+            flash("نصب خودکار فقط روی ویندوز پشتیبانی می‌شود.")
+    except Exception as e:
+        flash(f"خطا در نصب: {str(e)}")
+
+    return redirect(url_for("index"))
 
 @app.route("/", methods=["GET", "POST"])
 def index():

@@ -92,6 +92,10 @@
             {% endif %}
         {% endwith %}
 
+        <form method="post" action="/install-ffmpeg" style="margin-bottom: 20px;">
+            <button type="submit" style="background:#e67e22;">نصب خودکار ffmpeg (ویندوز)</button>
+        </form>
+
         <form method="post" enctype="multipart/form-data">
             <label for="audio">۱. آپلود فایل صوتی (m4a, mp3, wav, ...):</label>
             <input type="file" name="audio" id="audio" accept="audio/*,.m4a,.mp3,.wav,.aac">
