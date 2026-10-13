@@ -152,7 +152,12 @@ def index():
                 transcript = transcribe_segments(segments, language)
 
             progress_data["transcript"] = transcript
-            return render_template("index.html", transcript=transcript)
+
+            out_path = os.path.join(UPLOAD_FOLDER, "transcript.txt")
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(transcript)
+
+            return send_file(out_path, as_attachment=True, download_name="transcript.txt")
         except Exception as e:
             progress_data["status"] = "خطا"
             flash(f"خطا در پردازش: {str(e)}")
