@@ -13,7 +13,7 @@
             color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 640px;
             margin: 40px auto;
             background: white;
             padding: 30px;
@@ -35,12 +35,18 @@
             margin: 15px 0 5px;
             font-weight: bold;
         }
-        input[type="file"], select {
+        input[type="file"], input[type="text"], select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
             box-sizing: border-box;
+        }
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #95a5a6;
+            font-size: 14px;
         }
         button {
             width: 100%;
@@ -68,13 +74,14 @@
             color: #95a5a6;
             margin-top: 20px;
             text-align: center;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>تبدیل صوت به متن</h1>
-        <p class="subtitle">فایل صوتی خود را آپلود کنید (پشتیبانی از فارسی)</p>
+        <p class="subtitle">فایل صوتی آپلود کنید یا لینک گوگل درایو وارد نمایید</p>
 
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -85,8 +92,13 @@
         {% endwith %}
 
         <form method="post" enctype="multipart/form-data">
-            <label for="audio">فایل صوتی (m4a, mp3, wav, ...):</label>
-            <input type="file" name="audio" id="audio" accept="audio/*,.m4a,.mp3,.wav,.aac" required>
+            <label for="audio">۱. آپلود فایل صوتی (m4a, mp3, wav, ...):</label>
+            <input type="file" name="audio" id="audio" accept="audio/*,.m4a,.mp3,.wav,.aac">
+
+            <div class="divider">— یا —</div>
+
+            <label for="drive_url">۲. لینک گوگل درایو:</label>
+            <input type="text" name="drive_url" id="drive_url" placeholder="https://drive.google.com/file/d/...">
 
             <label for="language">زبان:</label>
             <select name="language" id="language">
@@ -99,6 +111,7 @@
         </form>
 
         <p class="note">
+            برای لینک گوگل درایو، فایل باید روی حالت <strong>«Anyone with the link»</strong> باشد.<br>
             فایل‌های طولانی به صورت خودکار به بخش‌های ۳۰ ثانیه‌ای تقسیم می‌شوند.<br>
             خروجی فقط یک فایل متنی (transcript.txt) خواهد بود.
         </p>
