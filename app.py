@@ -14,6 +14,8 @@ app.secret_key = "audio-to-text-secret"
 UPLOAD_FOLDER = "/tmp/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+progress_data = {"percent": 0, "status": "idle", "transcript": ""}
+
 def is_ffmpeg_available() -> bool:
     return shutil.which("ffmpeg") is not None
 
@@ -37,16 +39,21 @@ def split_audio(audio_path: str, segment_dir: str, segment_time: int = 30) -> li
 def transcribe_segments(segments: list[str], language: str = "fa-IR") -> str:
     r = sr.Recognizer()
     full_text = []
-    for seg in segments:
+    total = len(segments)
+    for i, seg in enumerate(segments):
         try:
             with sr.AudioFile(seg) as source:
                 audio = r.record(source)
                 text = r.recognize_google(audio, language=language)
                 full_text.append(text.strip())
         except sr.UnknownValueError:
-            continue
+            pass
         except Exception:
-            continue
+            pass
+        progress_data["percent"] = int((i + 1) / total * 100)
+        progress_data["status"] = f"در حال پردازش بخش {i+1} از {total}"
+    progress_data["percent"] = 100
+    progress_data["status"] = "تمام شد"
     return " ".join(full_text)
 
 def extract_drive_file_id(url: str) -> str | None:
@@ -104,9 +111,17 @@ def install_ffmpeg():
 
     return redirect(url_for("index"))
 
+@app.route("/progress")
+def progress():
+    return progress_data
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
+        progress_data["percent"] = 0
+        progress_data["status"] = "شروع پردازش..."
+        progress_data["transcript"] = ""
+
         language = request.form.get("language", "fa-IR")
         drive_url = request.form.get("drive_url", "").strip()
         uploaded_file = request.files.get("audio")
@@ -134,12 +149,10 @@ def index():
                 segments = split_audio(filepath, tmpdir)
                 transcript = transcribe_segments(segments, language)
 
-            out_path = os.path.join(UPLOAD_FOLDER, "transcript.txt")
-            with open(out_path, "w", encoding="utf-8") as f:
-                f.write(transcript)
-
-            return send_file(out_path, as_attachment=True, download_name="transcript.txt")
+            progress_data["transcript"] = transcript
+            return render_template("index.html", transcript=transcript)
         except Exception as e:
+            progress_data["status"] = "خطا"
             flash(f"خطا در پردازش: {str(e)}")
             return redirect(request.url)
 

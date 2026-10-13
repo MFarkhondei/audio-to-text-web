@@ -112,12 +112,26 @@
                 <option value="ar-SA">عربی (Arabic)</option>
             </select>
 
-            <button type="submit">تبدیل به متن</button>
+            <button type="submit" id="submitBtn">تبدیل به متن</button>
         </form>
+
+        <div id="progressContainer" style="display:none; margin-top:20px;">
+            <div style="background:#eee; border-radius:8px; overflow:hidden; height:24px;">
+                <div id="progressBar" style="width:0%; height:100%; background:#3498db; transition:width 0.3s;"></div>
+            </div>
+            <p id="progressStatus" style="text-align:center; margin-top:8px; color:#555;">۰٪</p>
+        </div>
 
         <form method="post" action="/install-ffmpeg" style="margin-top: 10px;">
             <button type="submit" style="background: #27ae60;">نصب ffmpeg (در صورت نیاز)</button>
         </form>
+
+        {% if transcript %}
+        <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+            <h3 style="margin-top: 0; color: #2c3e50;">متن رونویسی‌شده:</h3>
+            <pre style="white-space: pre-wrap; font-family: Vazir, Tahoma, Arial, sans-serif; line-height: 1.8; margin: 0;">{{ transcript }}</pre>
+        </div>
+        {% endif %}
 
         <p class="note">
             برای لینک گوگل درایو، فایل باید روی حالت <strong>«Anyone with the link»</strong> باشد.<br>
@@ -125,5 +139,24 @@
             خروجی فقط یک فایل متنی (transcript.txt) خواهد بود.
         </p>
     </div>
+
+    <script>
+    document.querySelector('form[enctype]').addEventListener('submit', function() {
+        document.getElementById('progressContainer').style.display = 'block';
+        document.getElementById('submitBtn').disabled = true;
+        let interval = setInterval(async () => {
+            try {
+                let res = await fetch('/progress');
+                let data = await res.json();
+                document.getElementById('progressBar').style.width = data.percent + '%';
+                document.getElementById('progressStatus').innerText = data.percent + '% - ' + data.status;
+                if (data.percent >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('submitBtn').disabled = false;
+                }
+            } catch(e) {}
+        }, 800);
+    });
+    </script>
 </body>
 </html>
