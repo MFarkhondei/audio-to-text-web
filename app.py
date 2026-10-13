@@ -50,7 +50,9 @@ def transcribe_segments(segments: list[str], language: str = "fa-IR") -> str:
             pass
         except Exception:
             pass
-        progress_data["percent"] = int((i + 1) / total * 100)
+        new_percent = int((i + 1) / total * 100)
+        if new_percent > progress_data["percent"]:
+            progress_data["percent"] = new_percent
         progress_data["status"] = f"در حال پردازش بخش {i+1} از {total}"
     progress_data["percent"] = 100
     progress_data["status"] = "تمام شد"
