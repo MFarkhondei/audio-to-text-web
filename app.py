@@ -126,9 +126,9 @@ def index():
 
         language = request.form.get("language", "fa-IR")
         drive_url = request.form.get("drive_url", "").strip()
-        uploaded_file = request.files.get("audio")
+        uploaded_files = request.files.getlist("audio")
 
-        filepath = None
+        filepaths = []
 
         if drive_url:
             file_id = extract_drive_file_id(drive_url)
@@ -139,23 +139,36 @@ def index():
             if not download_drive_file(file_id, filepath):
                 flash("دانلود از گوگل درایو ناموفق بود. مطمئن شوید فایل عمومی (Anyone with the link) باشد.")
                 return redirect(request.url)
-        elif uploaded_file and uploaded_file.filename:
-            filepath = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
-            uploaded_file.save(filepath)
+            filepaths.append(filepath)
+        elif uploaded_files and any(f.filename for f in uploaded_files):
+            for uploaded_file in uploaded_files:
+                if uploaded_file.filename:
+                    filepath = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
+                    uploaded_file.save(filepath)
+                    filepaths.append(filepath)
         else:
-            flash("لطفاً یک فایل آپلود کنید یا لینک گوگل درایو وارد کنید")
+            flash("لطفاً یک یا چند فایل آپلود کنید یا لینک گوگل درایو وارد کنید")
             return redirect(request.url)
 
         try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                segments = split_audio(filepath, tmpdir)
-                transcript = transcribe_segments(segments, language)
+            all_transcripts = []
+            total_files = len(filepaths)
+            for idx, filepath in enumerate(filepaths):
+                progress_data["status"] = f"در حال پردازش فایل {idx+1} از {total_files}"
+                progress_data["percent"] = int(idx / total_files * 100)
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    segments = split_audio(filepath, tmpdir)
+                    transcript = transcribe_segments(segments, language)
+                    all_transcripts.append(f"=== فایل {idx+1}: {os.path.basename(filepath)} ===\n{transcript}")
 
-            progress_data["transcript"] = transcript
+            full_transcript = "\n\n".join(all_transcripts)
+            progress_data["transcript"] = full_transcript
+            progress_data["percent"] = 100
+            progress_data["status"] = "تمام شد"
 
             out_path = os.path.join(UPLOAD_FOLDER, "transcript.txt")
             with open(out_path, "w", encoding="utf-8") as f:
-                f.write(transcript)
+                f.write(full_transcript)
 
             return send_file(out_path, as_attachment=True, download_name="transcript.txt")
         except Exception as e:
